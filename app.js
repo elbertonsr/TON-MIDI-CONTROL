@@ -1,0 +1,300 @@
+// --- CACHE CENTRALIZADO (ALTA PERFORMANCE) ---
+        const UI = {
+            mainMenu: document.getElementById('main-menu'), textMenu: document.getElementById('menu-textos'), padMenu: document.getElementById('menu-pads'),
+            textContainer: document.getElementById('text-inputs-container'), padContainer: document.getElementById('pad-colors-container'),
+            leslie: document.getElementById('leslie-switch'), app: document.getElementById('app'), overlay: document.getElementById('start-overlay'),
+            midiStatus: document.getElementById('midi-status'), midiOutputs: document.getElementById('midi-outputs'),
+            btnTogglePage: document.getElementById('btn-toggle-page'), viewPage1: document.getElementById('view-page-1'), viewPage2: document.getElementById('view-page-2'),
+            sliders: [], knobs: [], stripBtns: [], cache: {}
+        };
+
+        function getEl(id) { if (!UI.cache[id]) UI.cache[id] = document.getElementById(id); return UI.cache[id]; }
+
+        // MATRIZ ATUALIZADA: Todos os IDs de rótulos mapeados, incluindo a Página 2
+        const labelsToEdit = [
+            'k1','k2','k3','k4','k5','k6','k7','k8','k9','k10','k11','k12',
+            'f1','f2','f3','f4','f5','f6','f7',
+            'p1','p2','p3','p4','p5',
+            's1','s2','s3','s4','s5',
+            'b7','b8','b9','b10','b11','b12','b13','b14','b15','b16','b17','b18'
+        ];
+
+        function initDOMCache() {
+            UI.sliders = Array.from(document.querySelectorAll('.midi-slider'));
+            UI.knobs = Array.from(document.querySelectorAll('.knob-dial'));
+            UI.stripBtns = Array.from(document.querySelectorAll('.strip-btn'));
+        }
+
+        function createLEDs() {
+            document.querySelectorAll('.led-ring').forEach(ring => {
+                if(ring.children.length > 0) return;
+                for(let i=0; i<11; i++) {
+                    let led = document.createElement('div'); led.className = 'knob-led';
+                    let rad = (-135 + (i * 27)) * Math.PI / 180;
+                    led.style.left = `${26 + 25 * Math.sin(rad) - 1.5}px`; led.style.top = `${26 - 25 * Math.cos(rad) - 1.5}px`; 
+                    led.style.transform = `rotate(${-135 + (i * 27)}deg)`;
+                    ring.appendChild(led);
+                }
+            });
+            document.querySelectorAll('.fader-led-strip').forEach(strip => {
+                if(strip.children.length > 0) return;
+                for(let i=0; i<10; i++) { let led = document.createElement('div'); led.className = 'fader-led'; strip.appendChild(led); }
+            });
+        }
+
+        function buildPadColorsMenu() {
+            UI.padContainer.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const div = document.createElement('div'); div.className = 'form-group';
+                div.innerHTML = `<label>Pad ${i}</label><select id="color-p${i}"><option value="purple">Padrão (Roxo)</option><option value="blue">Azul</option><option value="orange">Laranja</option><option value="green">Verde</option><option value="red">Vermelho</option></select>`;
+                UI.padContainer.appendChild(div);
+            }
+        }
+
+        // --- AUTOSAVE E CONFIG ---
+        let saveTimeout;
+        function queueSave() { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { autoSaveConfig(); }, 500); }
+
+        function autoSaveConfig() {
+            const config = { labels: {}, colors: {}, faders: {}, knobs: {}, buttons: {}, leslie: "0" };
+            labelsToEdit.forEach(id => { const el = getEl(`lbl-${id}`); if (el) config.labels[id] = el.textContent; });
+            for (let i=1; i<=5; i++) { const el = getEl(`pad-${i}`); if (el) config.colors[`p${i}`] = el.getAttribute('data-color') || 'purple'; }
+            UI.sliders.forEach(s => config.faders[s.id] = s.value);
+            UI.knobs.forEach(k => config.knobs[k.id] = k.getAttribute('data-val'));
+            UI.stripBtns.forEach(b => config.buttons[b.id] = b.getAttribute('data-status'));
+            config.leslie = UI.leslie.getAttribute('data-status') || '0';
+            localStorage.setItem('ton_config', JSON.stringify(config));
+        }
+
+        function loadConfig() {
+            const raw = localStorage.getItem('ton_config');
+            let config = raw ? JSON.parse(raw) : { labels: {}, colors: {}, faders: {}, knobs: {}, buttons: {}, leslie: "0" };
+
+            labelsToEdit.forEach(id => { const text = config.labels[id] || localStorage.getItem(`ton_lbl_${id}`); if (text && getEl(`lbl-${id}`)) getEl(`lbl-${id}`).textContent = text; });
+            for (let i=1; i<=5; i++) { let c = config.colors[`p${i}`] || localStorage.getItem(`ton_color_p${i}`); if (c) { if(c.startsWith('pad-')) c = c.replace('pad-', ''); getEl(`pad-${i}`).setAttribute('data-color', c); } }
+            UI.sliders.forEach(s => { s.value = config.faders[s.id] || 0; renderFader(s.id, s.value); });
+            UI.knobs.forEach(k => { renderKnob(k, parseInt(config.knobs[k.id] || k.getAttribute('data-val') || 0)); });
+            UI.stripBtns.forEach(b => { const st = config.buttons[b.id] || '0'; b.setAttribute('data-status', st); b.classList.toggle('active', st === '1'); });
+            const ls = config.leslie || '0'; UI.leslie.setAttribute('data-status', ls); UI.leslie.classList.toggle('active', ls === '1');
+            if(!raw) autoSaveConfig();
+        }
+
+        // --- 1. EXPORTAR / IMPORTAR CONFIGURAÇÃO ---
+        document.getElementById('btn-export-config').addEventListener('click', () => {
+            const data = localStorage.getItem('ton_config') || '{}';
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'ton_config.json';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('btn-import-config').addEventListener('click', () => document.getElementById('input-import-file').click());
+
+        document.getElementById('input-import-file').addEventListener('change', (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    if (parsed && typeof parsed === 'object') {
+                        localStorage.setItem('ton_config', JSON.stringify(parsed));
+                        loadConfig(); UI.mainMenu.style.display = 'none';
+                    }
+                } catch(err) { console.error("Erro na leitura do arquivo JSON."); }
+            };
+            reader.readAsText(file);
+        });
+
+        // --- 5. ALTERNAR PÁGINAS ---
+        UI.btnTogglePage.addEventListener('click', () => {
+            const isPage1 = UI.viewPage1.style.display !== 'none';
+            UI.viewPage1.style.display = isPage1 ? 'none' : 'flex';
+            UI.viewPage2.style.display = isPage1 ? 'flex' : 'none';
+            UI.btnTogglePage.textContent = isPage1 ? 'PÁG 1' : 'PÁG 2';
+        });
+
+        // --- EVENT DELEGATION CLICKS E MENUS ---
+        document.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.id === 'hamburguer-btn') { UI.mainMenu.style.display = 'flex'; return; }
+            if (target.id === 'btn-close-main') { UI.mainMenu.style.display = 'none'; return; }
+            if (target.id === 'btn-close-textos') { UI.textMenu.style.display = 'none'; return; }
+            if (target.id === 'btn-close-pads') { UI.padMenu.style.display = 'none'; return; }
+
+            if (target.id === 'btn-open-textos') {
+                UI.mainMenu.style.display = 'none'; UI.textContainer.innerHTML = '';
+                labelsToEdit.forEach(id => {
+                    const lbl = getEl('lbl-' + id); if(!lbl) return;
+                    const div = document.createElement('div'); div.className = 'form-group';
+                    // ADAPTADO: Detecção do tipo agora inclui Botões ('b')
+                    let typeName = id.startsWith('k') ? 'Knob' : id.startsWith('f') ? 'Fader' : id.startsWith('s') ? 'Scene' : id.startsWith('b') ? 'Botão' : 'Pad';
+                    div.innerHTML = `<label>${typeName} ${id.toUpperCase()}</label><input type="text" id="input-edit-${id}" value="${lbl.textContent}">`;
+                    UI.textContainer.appendChild(div);
+                });
+                UI.textMenu.style.display = 'flex'; return;
+            }
+
+            if (target.id === 'btn-save-textos') {
+                labelsToEdit.forEach(id => { const input = getEl(`input-edit-${id}`); if (input) getEl(`lbl-${id}`).textContent = input.value; });
+                UI.textMenu.style.display = 'none'; queueSave(); return;
+            }
+
+            if (target.id === 'btn-open-pads') {
+                UI.mainMenu.style.display = 'none';
+                for (let i=1; i<=5; i++) { const sel = getEl(`color-p${i}`); if(sel) sel.value = getEl(`pad-${i}`).getAttribute('data-color') || 'purple'; }
+                UI.padMenu.style.display = 'flex'; return;
+            }
+
+            if (target.id === 'btn-save-pads') {
+                for (let i=1; i<=5; i++) { const sel = getEl(`color-p${i}`); if(sel) getEl(`pad-${i}`).setAttribute('data-color', sel.value); }
+                UI.padMenu.style.display = 'none'; queueSave(); return;
+            }
+
+            const stripBtn = target.closest('.strip-btn');
+            if (stripBtn) {
+                let state = stripBtn.getAttribute('data-status') === '1' ? '0' : '1';
+                stripBtn.setAttribute('data-status', state); stripBtn.classList.toggle('active', state === '1');
+                sendControlChange(parseInt(stripBtn.getAttribute('data-cc')), state === '1' ? 127 : 0); queueSave(); return;
+            }
+
+            const leslieBtn = target.closest('#leslie-switch');
+            if (leslieBtn) {
+                let state = leslieBtn.getAttribute('data-status') === '1' ? '0' : '1';
+                leslieBtn.setAttribute('data-status', state); leslieBtn.classList.toggle('active', state === '1');
+                sendControlChange(parseInt(leslieBtn.getAttribute('data-cc')), state === '1' ? 127 : 0); queueSave(); return;
+            }
+        });
+
+        document.addEventListener('input', (e) => { if (e.target.classList.contains('midi-slider')) { renderFader(e.target.id, e.target.value); sendControlChange(parseInt(e.target.getAttribute('data-cc')), parseInt(e.target.value)); } });
+        document.addEventListener('change', (e) => { if (e.target.classList.contains('midi-slider')) queueSave(); if (e.target.id === 'midi-outputs' && midiAccess) midiOutput = midiAccess.outputs.get(e.target.value); });
+
+        // --- 2. MIDI IN E OUT COM SINCRONIZAÇÃO OTIMIZADA ---
+        let midiAccess = null; let midiOutput = null;
+        if (navigator.requestMIDIAccess) navigator.requestMIDIAccess().then(onMIDISuccess, () => console.warn("MIDI negado."));
+
+        function onMIDISuccess(midi) { 
+            midiAccess = midi; updateOutputs(); updateInputs(); 
+            midiAccess.onstatechange = () => { updateOutputs(); updateInputs(); }; 
+        }
+
+        function updateOutputs() {
+            const outputs = midiAccess.outputs; UI.midiOutputs.innerHTML = '';
+            if (outputs.size === 0) { UI.midiOutputs.innerHTML = '<option value="">Sem Saída MIDI</option>'; UI.midiStatus.classList.remove('connected'); midiOutput = null; return; }
+            UI.midiStatus.classList.add('connected');
+            outputs.forEach(out => { const opt = document.createElement('option'); opt.value = out.id; opt.textContent = out.name.substring(0, 20); UI.midiOutputs.appendChild(opt); });
+            midiOutput = outputs.get(UI.midiOutputs.value);
+        }
+
+        function updateInputs() { midiAccess.inputs.forEach(input => input.onmidimessage = handleIncomingMIDI); }
+
+        function handleIncomingMIDI(msg) {
+            const [status, ccOrNote, value] = msg.data;
+            const cmd = status & 0xF0;
+
+            if (cmd === 0xB0) { // Control Change (Sincroniza Faders, Knobs, Botões)
+                UI.sliders.forEach(s => { if (parseInt(s.getAttribute('data-cc')) === ccOrNote) { s.value = value; renderFader(s.id, value); }});
+                UI.knobs.forEach(k => { if (parseInt(k.getAttribute('data-cc')) === ccOrNote) renderKnob(k, value); });
+                UI.stripBtns.forEach(b => { if (parseInt(b.getAttribute('data-cc')) === ccOrNote) { let on = value >= 64; b.setAttribute('data-status', on ? '1' : '0'); b.classList.toggle('active', on); }});
+                if (parseInt(UI.leslie.getAttribute('data-cc')) === ccOrNote) { let on = value >= 64; UI.leslie.setAttribute('data-status', on ? '1' : '0'); UI.leslie.classList.toggle('active', on); }
+            }
+            // Sincroniza PADS e SCENES caso o Software envie Feedback de Note On/Off
+            else if (cmd === 0x90 || cmd === 0x80) {
+                let isOn = cmd === 0x90 && value > 0;
+                document.querySelectorAll('.drum-pad').forEach(p => { if (parseInt(p.getAttribute('data-cc')) === ccOrNote) p.classList.toggle('active-touch', isOn); });
+                document.querySelectorAll('.scene-btn').forEach(s => { if (parseInt(s.getAttribute('data-cc')) === ccOrNote) s.classList.toggle('active', isOn); });
+            }
+        }
+
+        function sendControlChange(cc, value) { if (midiOutput) midiOutput.send([0xB0, cc, value]); }
+
+        // --- RENDERIZADORES ---
+        function renderKnob(knobEl, value) {
+            knobEl.setAttribute('data-val', value);
+            const indicator = getEl('ind-' + knobEl.id); if (indicator) indicator.style.transform = `rotate(${-135 + (value / 127) * 270}deg)`;
+            let activeLeds = Math.round((value / 127) * 11);
+            const ring = getEl('ring-' + knobEl.id);
+            if (ring) ring.querySelectorAll('.knob-led').forEach((led, idx) => led.classList.toggle('on', idx < activeLeds));
+        }
+
+        function renderFader(sliderId, value) {
+            let activeLeds = Math.round((value / 127) * 10);
+            const strip = getEl('leds-' + sliderId);
+            if (strip) strip.querySelectorAll('.fader-led').forEach((led, idx) => led.classList.toggle('on', idx < activeLeds));
+        }
+
+        // --- DRAG DE KNOBS ---
+        let activeKnob = null; let knobStartY = 0; let knobStartVal = 0; let knobRafId = null;
+
+        function onKnobDrag(e) {
+            if(!activeKnob) return; e.preventDefault();
+            let isPortrait = window.innerHeight > window.innerWidth; let delta;
+            if (isPortrait) { let x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX; delta = x - knobStartY; } 
+            else { let y = e.type.includes('touch') ? e.touches[0].clientY : e.clientY; delta = knobStartY - y; }
+            
+            let newVal = Math.max(0, Math.min(127, knobStartVal + Math.round(delta * 1.2))); 
+            
+            if (knobRafId) cancelAnimationFrame(knobRafId);
+            knobRafId = requestAnimationFrame(() => { renderKnob(activeKnob, newVal); sendControlChange(parseInt(activeKnob.getAttribute('data-cc')), newVal); });
+        }
+
+        function stopKnobDrag() { activeKnob = null; document.removeEventListener('touchmove', onKnobDrag); document.removeEventListener('mousemove', onKnobDrag); queueSave(); }
+
+        // --- EVENTOS TÁTEIS: PADS, SCENES, KNOBS ---
+        const handlePress = (e) => {
+            const target = e.target;
+            const knob = target.closest('.knob-dial');
+            if (knob) {
+                e.preventDefault(); activeKnob = knob;
+                let isPortrait = window.innerHeight > window.innerWidth;
+                knobStartY = isPortrait ? (e.type.includes('touch') ? e.touches[0].clientX : e.clientX) : (e.type.includes('touch') ? e.touches[0].clientY : e.clientY);
+                knobStartVal = parseInt(activeKnob.getAttribute('data-val')) || 0;
+                document.addEventListener('touchmove', onKnobDrag, {passive: false}); document.addEventListener('mousemove', onKnobDrag);
+                document.addEventListener('touchend', stopKnobDrag); document.addEventListener('mouseup', stopKnobDrag); return;
+            }
+
+            const pad = target.closest('.drum-pad');
+            if (pad) {
+                if (e.type === 'touchstart') e.preventDefault();
+                if (!pad.classList.contains('active-touch')) {
+                    // 3. VIBRAÇÃO APENAS NOS PADS
+                    if (navigator.vibrate) navigator.vibrate(25);
+                    pad.classList.add('active-touch'); sendControlChange(parseInt(pad.getAttribute('data-cc')), 127);
+                }
+                return;
+            }
+
+            const scene = target.closest('.scene-btn');
+            if (scene) {
+                if (e.type === 'touchstart') e.preventDefault();
+                if (!scene.classList.contains('active')) { scene.classList.add('active'); sendControlChange(parseInt(scene.getAttribute('data-cc')), parseInt(scene.getAttribute('data-val'))); }
+                return;
+            }
+        };
+
+        const handleRelease = (e) => {
+            const target = e.target;
+            const pad = target.closest('.drum-pad');
+            if (pad) {
+                if (e.type === 'touchend') e.preventDefault();
+                if (pad.classList.contains('active-touch')) { pad.classList.remove('active-touch'); sendControlChange(parseInt(pad.getAttribute('data-cc')), 0); }
+                return;
+            }
+            const scene = target.closest('.scene-btn');
+            if (scene) {
+                if (e.type === 'touchend') e.preventDefault();
+                if (scene.classList.contains('active')) { scene.classList.remove('active'); sendControlChange(parseInt(scene.getAttribute('data-cc')), 0); }
+                return;
+            }
+        };
+
+        document.addEventListener('touchstart', handlePress, {passive: false}); document.addEventListener('mousedown', handlePress);
+        document.addEventListener('touchend', handleRelease); document.addEventListener('mouseup', handleRelease); document.addEventListener('mouseleave', handleRelease, true);
+
+        // --- SISTEMA INICIALIZADOR ---
+        UI.overlay.addEventListener('click', async () => {
+            try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+                  if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (err) {}
+            UI.overlay.style.display = 'none'; UI.app.style.display = 'flex';
+        });
+
+        window.addEventListener('DOMContentLoaded', () => { initDOMCache(); createLEDs(); buildPadColorsMenu(); loadConfig(); });
