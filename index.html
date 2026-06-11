@@ -176,8 +176,8 @@ body {
 <div class="modal-overlay" id="main-menu">
 <div class="modal-content">
 <div class="modal-title">Configurações Avançadas</div>
-<button class="modal-btn" id="btn-open-textos">Configurar Textos</button>
-<button class="modal-btn" id="btn-open-pads">Cores dos Pads</button>
+<button class="modal-btn" id="btn-open-textos">Editar Textos</button>
+<button class="modal-btn" id="btn-open-pads">Alterar Cores dos Pads</button>
 <button class="modal-btn" id="btn-export-config">Exportar Configuração</button>
 <button class="modal-btn" id="btn-import-config">Importar Configuração</button>
 <input accept=".json" id="input-import-file" style="display: none;" type="file"/>
@@ -186,7 +186,7 @@ body {
 </div>
 <div class="modal-overlay" id="menu-textos">
 <div class="modal-content">
-<div class="modal-title">Ajustar Textos</div>
+<div class="modal-title">Editar Textos</div>
 <div class="scrollable-inputs" id="text-inputs-container"></div>
 <div style="display: flex; gap: 10px; margin-top: 5px;">
 <button class="modal-btn primary" id="btn-save-textos" style="flex: 1;">Salvar</button>
@@ -196,7 +196,7 @@ body {
 </div>
 <div class="modal-overlay" id="menu-pads">
 <div class="modal-content">
-<div class="modal-title">Cores dos Pads</div>
+<div class="modal-title">Alterar Cores dos Pads</div>
 <div class="scrollable-inputs" id="pad-colors-container"></div>
 <div style="display: flex; gap: 10px; margin-top: 5px;">
 <button class="modal-btn primary" id="btn-save-pads" style="flex: 1;">Salvar</button>
@@ -228,7 +228,7 @@ body {
 </div>
 <div class="pad-separator"></div>
 <div class="pad-knob-wrapper">
-<div class="label-display" id="lbl-k6" style="color:var(--accent-purple)">Pad FX</div>
+<div class="label-display" id="lbl-k6" style="color:var(--accent-purple)">Volume</div>
 <div class="knob-dial-wrapper">
 <div class="led-ring" id="ring-k6"></div>
 <div class="knob-dial" data-cc="48" data-val="0" id="k6"><div class="knob-indicator" id="ind-k6"></div></div>
@@ -291,21 +291,21 @@ body {
 </div>
 <div class="main-layout" id="view-page-2" style="display: none;">
 <div style="display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 6px; flex: 2; height: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
-<button class="strip-btn" data-cc="80" data-status="0" id="b7"><span id="lbl-b7" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B7</span></button>
-<button class="strip-btn" data-cc="81" data-status="0" id="b8"><span id="lbl-b8" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B8</span></button>
-<button class="strip-btn" data-cc="82" data-status="0" id="b9"><span id="lbl-b9" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B9</span></button>
-<button class="strip-btn" data-cc="83" data-status="0" id="b10"><span id="lbl-b10" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B10</span></button>
-<button class="strip-btn" data-cc="84" data-status="0" id="b11"><span id="lbl-b11" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B11</span></button>
-<button class="strip-btn" data-cc="85" data-status="0" id="b12"><span id="lbl-b12" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B12</span></button>
-<button class="strip-btn" data-cc="86" data-status="0" id="b13"><span id="lbl-b13" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B13</span></button>
-<button class="strip-btn" data-cc="87" data-status="0" id="b14"><span id="lbl-b14" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B14</span></button>
-<button class="strip-btn" data-cc="88" data-status="0" id="b15"><span id="lbl-b15" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B15</span></button>
-<button class="strip-btn" data-cc="89" data-status="0" id="b16"><span id="lbl-b16" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B16</span></button>
-<button class="strip-btn" data-cc="90" data-status="0" id="b17"><span id="lbl-b17" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B17</span></button>
-<button class="strip-btn" data-cc="91" data-status="0" id="b18"><span id="lbl-b18" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B18</span></button>
+<button class="strip-btn" data-cc="80" data-status="0" id="b7"><span id="lbl-b7" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">C</span></button>
+<button class="strip-btn" data-cc="81" data-status="0" id="b8"><span id="lbl-b8" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">C#</span></button>
+<button class="strip-btn" data-cc="82" data-status="0" id="b9"><span id="lbl-b9" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">D</span></button>
+<button class="strip-btn" data-cc="83" data-status="0" id="b10"><span id="lbl-b10" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">D#</span></button>
+<button class="strip-btn" data-cc="84" data-status="0" id="b11"><span id="lbl-b11" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">E</span></button>
+<button class="strip-btn" data-cc="85" data-status="0" id="b12"><span id="lbl-b12" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">F</span></button>
+<button class="strip-btn" data-cc="86" data-status="0" id="b13"><span id="lbl-b13" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">F#</span></button>
+<button class="strip-btn" data-cc="87" data-status="0" id="b14"><span id="lbl-b14" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">G</span></button>
+<button class="strip-btn" data-cc="88" data-status="0" id="b15"><span id="lbl-b15" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">G#</span></button>
+<button class="strip-btn" data-cc="89" data-status="0" id="b16"><span id="lbl-b16" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">A</span></button>
+<button class="strip-btn" data-cc="90" data-status="0" id="b17"><span id="lbl-b17" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">A#</span></button>
+<button class="strip-btn" data-cc="91" data-status="0" id="b18"><span id="lbl-b18" style="color: var(--text-muted); font-size: 0.65rem; font-weight: bold; pointer-events: none;">B</span></button>
 </div>
 <div class="channel-strip" style="flex: 0.5; height: 100%; justify-content: center; align-items: center; padding: 15px 0;">
-<div class="label-display" id="lbl-f7" style="margin-bottom: 8px;">Vol 2</div>
+<div class="label-display" id="lbl-f7" style="margin-bottom: 8px;">Volume</div>
 <div class="slider-container" style="height: 100%; width: 100%;">
 <div class="fader-led-strip" id="leds-f7"></div>
 <input class="midi-slider" data-cc="70" id="f7" max="127" min="0" type="range" value="0"/>
@@ -314,26 +314,26 @@ body {
 <div style="display: flex; flex-direction: column; gap: 12px; flex: 2; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; justify-content: space-around; height: 100%;">
 <div style="display: flex; justify-content: space-around; width: 100%;">
 <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-<div class="label-display" id="lbl-k8">Knob 8</div>
-<div class="knob-dial-wrapper"><div class="led-ring" id="ring-k8"></div><div class="knob-dial" data-cc="71" data-val="0" id="k8"><div class="knob-indicator" id="ind-k8"></div></div></div>
+<div class="label-display" id="lbl-k8">Knob 1</div>
+<div class="knob-dial-wrapper"><div class="led-ring" id="ring-k8"></div><div class="knob-dial" data-cc="92" data-val="0" id="k8"><div class="knob-indicator" id="ind-k8"></div></div></div>
 </div>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-<div class="label-display" id="lbl-k9">Knob 9</div>
-<div class="knob-dial-wrapper"><div class="led-ring" id="ring-k9"></div><div class="knob-dial" data-cc="72" data-val="0" id="k9"><div class="knob-indicator" id="ind-k9"></div></div></div>
+<div class="label-display" id="lbl-k9">Knob 2</div>
+<div class="knob-dial-wrapper"><div class="led-ring" id="ring-k9"></div><div class="knob-dial" data-cc="93" data-val="0" id="k9"><div class="knob-indicator" id="ind-k9"></div></div></div>
 </div>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-<div class="label-display" id="lbl-k10">Knob 10</div>
-<div class="knob-dial-wrapper"><div class="led-ring" id="ring-k10"></div><div class="knob-dial" data-cc="73" data-val="0" id="k10"><div class="knob-indicator" id="ind-k10"></div></div></div>
+<div class="label-display" id="lbl-k10">Knob 3</div>
+<div class="knob-dial-wrapper"><div class="led-ring" id="ring-k10"></div><div class="knob-dial" data-cc="94" data-val="0" id="k10"><div class="knob-indicator" id="ind-k10"></div></div></div>
 </div>
 </div>
 <div style="display: flex; justify-content: space-around; width: 100%; padding: 0 10%;">
 <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-<div class="label-display" id="lbl-k11">Knob 11</div>
-<div class="knob-dial-wrapper"><div class="led-ring" id="ring-k11"></div><div class="knob-dial" data-cc="74" data-val="0" id="k11"><div class="knob-indicator" id="ind-k11"></div></div></div>
+<div class="label-display" id="lbl-k11">Knob 4</div>
+<div class="knob-dial-wrapper"><div class="led-ring" id="ring-k11"></div><div class="knob-dial" data-cc="95" data-val="0" id="k11"><div class="knob-indicator" id="ind-k11"></div></div></div>
 </div>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-<div class="label-display" id="lbl-k12">Knob 12</div>
-<div class="knob-dial-wrapper"><div class="led-ring" id="ring-k12"></div><div class="knob-dial" data-cc="75" data-val="0" id="k12"><div class="knob-indicator" id="ind-k12"></div></div></div>
+<div class="label-display" id="lbl-k12">Knob 5</div>
+<div class="knob-dial-wrapper"><div class="led-ring" id="ring-k12"></div><div class="knob-dial" data-cc="96" data-val="0" id="k12"><div class="knob-indicator" id="ind-k12"></div></div></div>
 </div>
 </div>
 </div>
