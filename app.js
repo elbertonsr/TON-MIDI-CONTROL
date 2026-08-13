@@ -1,3 +1,98 @@
+// =====================================================================
+// 🚀 PWA: SUPORTE OFFLINE (ARQUITETURA DE ARQUIVO ÚNICO - ISOMÓRFICA)
+// =====================================================================
+
+if (typeof window === 'undefined') {
+    // --- 1. CONTEXTO DO SERVICE WORKER ---
+    
+    // Mock de DOM: Evita erros no Worker ao interpretar o código de interface abaixo
+    const mockEl = { addEventListener: () => {}, classList: { toggle: () => {} }, getAttribute: () => null, setAttribute: () => {} };
+    globalThis.window = { addEventListener:Como programador sênior, compreendo perfeitamente seu objetivo e as restrições do seu fluxo de trabalho no Spck Editor. 
+
+Para tornar o aplicativo funcional offline (PWA) **sem criar um arquivo externo `sw.js`**, aplicaremos uma técnica avançada que converte o código do Service Worker em um `Blob` e o injeta dinamicamente no navegador.
+
+Adicione o código abaixo no **final do seu arquivo `app.js`**, logo após a última linha (`window.addEventListener('DOMContentLoaded', ...);`). Não é necessário alterar ou apagar nada do seu código atual.
+
+```javascript
+// --- SISTEMA OFFLINE (PWA) ---
+// Implementação dinâmica via Blob para evitar arquivos externos
+const enableOfflinePWA = () => {
+    if ('serviceWorker' in navigator) {
+        // Código do Service Worker definido como string
+        const swCode = `
+            const CACHE_NAME = 'ton-midi-cache-v1';
+            const ASSETS_TO_CACHE = [
+                './',
+                './index.html',
+                './app.js',
+                './manifest.json',
+                './icon-192.png',
+                './icon-512.png'
+            ];
+
+            // Instalação e Cache inicial
+            self.addEventListener('install', (event) => {
+                event.waitUntil(
+                    caches.open(CACHE_NAME)
+                    .then((cache) => cache.addAll(ASSETS_TO_CACHE))
+                    .then(() => self.skipWaiting())
+                );
+            });
+
+            // Ativação e limpeza de caches antigos
+            self.addEventListener('activate', (event) => {
+                event.waitUntil(
+                    caches.keys().then((cacheNames) => {
+                        return Promise.all(
+                            cacheNames.filter((name) => name !== CACHE_NAME)
+                            .map((name) => caches.delete(name))
+                        );
+                    }).then(() => self.clients.claim())
+                );
+            });
+
+            // Interceptação de requisições (Cache First com Network Fallback)
+            self.addEventListener('fetch', (event) => {
+                event.respondWith(
+                    caches.match(event.request).then((cachedResponse) => {
+                        if (cachedResponse) return cachedResponse;
+                        
+                        return fetch(event.request).then((networkResponse) => {
+                            // Verifica se a resposta é válida antes de fazer o cache
+                            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                                return networkResponse;
+                            }
+                            const responseToCache = networkResponse.clone();
+                            caches.open(CACHE_NAME).then((cache) => {
+                                cache.put(event.request, responseToCache);
+                            });
+                            return networkResponse;
+                        }).catch(() => {
+                            // Ignora erros de fetch quando offline (recursos já estão no cache)
+                        });
+                    })
+                );
+            });
+        `;
+
+        // Converte a string em um arquivo virtual (Blob)
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+
+        // Registra o Service Worker dinâmico
+        navigator.serviceWorker.register(swUrl)
+            .then((registration) => {
+                console.log('PWA: Modo Offline ativado com sucesso via Blob dinâmico.', registration.scope);
+            })
+            .catch((error) => {
+                console.error('PWA: Falha ao ativar o modo offline:', error);
+            });
+    }
+};
+
+// Inicia o processo após o carregamento completo da página
+window.addEventListener('load', enableOfflinePWA);
+
 // --- CACHE CENTRALIZADO (ALTA PERFORMANCE) ---
 const UI = {
     mainMenu: document.getElementById('main-menu'), textMenu: document.getElementById('menu-textos'), padMenu: document.getElementById('menu-pads'), midiMenu: document.getElementById('menu-midi'), presetsMenu: document.getElementById('menu-presets'),
